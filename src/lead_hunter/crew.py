@@ -6,6 +6,7 @@ from lead_hunter.tools.google_maps_tool import GoogleMapsSearchTool
 from lead_hunter.tools.website_generator import WebsiteGeneratorTool
 from lead_hunter.tools.github_pages_deployer import GithubPagesDeployerTool
 from lead_hunter.tools.email_sender import EmailSenderTool
+from lead_hunter.tools.gmail_draft_tool import GmailDraftTool
 
 
 @CrewBase
@@ -52,7 +53,7 @@ class LeadHunterCrew:
     def outreach_manager(self) -> Agent:
         return Agent(
             config=self.agents_config["outreach_manager"],
-            tools=[EmailSenderTool()],
+            tools=[GmailDraftTool()],  # Creates drafts — you review & send manually
         )
 
     # ── TASKS ───────────────────────────────────────────────────────────────
@@ -77,9 +78,6 @@ class LeadHunterCrew:
     def send_outreach_task(self) -> Task:
         return Task(
             config=self.tasks_config["send_outreach_task"],
-            # In dry-run: skip human review (no real emails anyway)
-            # In live mode: pause and ask for confirmation before sending
-            human_input=not self.dry_run,
             output_file="output/outreach_report.md",
         )
 

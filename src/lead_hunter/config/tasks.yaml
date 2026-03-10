@@ -95,21 +95,14 @@ write_proposal_task:
 
 send_outreach_task:
   description: >
-    Review the complete outreach package for each prospect and send emails.
-    For each lead:
-    1. Verify the email address is present and looks valid
-    2. Confirm the demo URL is accessible
-    3. Use the Email Sender tool to send the personalized email
-    4. Log the result (sent/failed) for each lead
-    5. Save all results to output/outreach_log.csv
-    IMPORTANT: Do NOT send more than {max_emails_per_run} emails per run.
-    IMPORTANT: If dry_run is True, log what WOULD be sent but do NOT call
-    the Email Sender tool — just output the preview.
+    For each lead that has a valid email address, use the Gmail Draft Creator
+    tool to create a draft in Gmail. Do NOT send — just create drafts.
+    For leads without email: note them as "manual follow-up needed".
+    Process maximum {max_emails_per_run} leads per run.
   expected_output: >
     A summary report with:
     - Total leads processed
-    - Emails sent successfully (or previewed in dry_run mode)
-    - Emails failed or skipped
-    - CSV log path
+    - Drafts created (with Gmail links)
+    - Leads skipped (no email — manual follow-up needed with phone/Facebook)
     - Recommended follow-up dates (3-5 days from today)
   agent: outreach_manager

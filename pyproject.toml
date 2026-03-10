@@ -9,12 +9,15 @@ description = "Automated B2B lead generation pipeline powered by CrewAI"
 readme = "README.md"
 requires-python = ">=3.10,<3.14"
 dependencies = [
-    "crewai>=0.80.0",
+    "crewai[anthropic,litellm]>=0.80.0",
     "crewai-tools>=0.25.0",
     "requests>=2.32.0",
     "python-dotenv>=1.0.0",
     "jinja2>=3.1.0",
     "PyGithub>=2.1.0",
+    "google-auth-oauthlib>=1.3.0",
+    "google-auth-httplib2>=0.3.0",
+    "google-api-python-client>=2.192.0",
 ]
 
 [project.scripts]

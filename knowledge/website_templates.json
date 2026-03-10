@@ -1,0 +1,40 @@
+{
+  "templates": [
+    {
+      "id": "restaurant",
+      "file": "restaurant.html",
+      "name": "Restaurant & Cafe",
+      "keywords": ["restaurant", "cafe", "coffee", "food", "bar", "bistro", "grill", "kitchen", "eatery", "dining"],
+      "color_scheme": "amber / stone",
+      "fonts": ["Playfair Display", "Lato"],
+      "description": "Warm, upscale restaurant aesthetic with amber accents and serif headings."
+    },
+    {
+      "id": "spa",
+      "file": "spa.html",
+      "name": "Spa & Wellness",
+      "keywords": ["spa", "massage", "wellness", "beauty", "salon", "thai massage", "aromatherapy", "holistic"],
+      "color_scheme": "purple / lavender",
+      "fonts": ["Cormorant Garamond", "Nunito"],
+      "description": "Elegant, minimalist wellness aesthetic with soft purple tones and luxury serif headings."
+    },
+    {
+      "id": "fitness",
+      "file": "fitness.html",
+      "name": "Fitness & Martial Arts",
+      "keywords": ["fitness", "gym", "sport", "yoga", "muay thai", "crossfit", "boxing", "training", "martial"],
+      "color_scheme": "red / dark zinc",
+      "fonts": ["Bebas Neue", "Inter"],
+      "description": "Bold, energetic design with dark background and red accents. High-impact display font."
+    },
+    {
+      "id": "general",
+      "file": "general.html",
+      "name": "General Business",
+      "keywords": [],
+      "color_scheme": "blue / slate",
+      "fonts": ["DM Serif Display", "DM Sans"],
+      "description": "Clean, professional design suitable for any service business. Blue and slate tones."
+    }
+  ]
+}

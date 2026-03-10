@@ -1,0 +1,91 @@
+find_leads_task:
+  description: >
+    Search Google Maps for "{business_type}" businesses in {location}.
+    For each business, collect:
+    - Business name
+    - Address
+    - Phone number
+    - Website URL (if exists)
+    - Rating and number of reviews
+    - Business category
+    Filter results: keep only businesses with 4+ stars and 50+ reviews
+    that either have no website or have a clearly outdated one.
+    Return a structured JSON list of up to {max_leads} qualified leads.
+  expected_output: >
+    A JSON array of qualified leads, each containing:
+    name, address, phone, website, rating, reviews_count, category,
+    google_maps_url, and a qualification_note explaining why this
+    is a good prospect.
+  agent: lead_scout
+
+analyze_business_task:
+  description: >
+    For each lead from the previous task:
+    1. Visit their website (if exists) and assess its quality
+       (mobile-friendly? HTTPS? modern design? loading speed?)
+    2. Search for their social media profiles (Instagram, Facebook)
+    3. Find the owner/manager email through the website, socials, or web search
+    4. Write a brief analysis of their digital presence gaps
+    Return an enriched version of each lead with contact details
+    and personalized analysis.
+  expected_output: >
+    An enriched JSON array where each lead now also includes:
+    email, social_media_links, website_analysis, digital_gaps,
+    and a personalization_notes field with specific observations
+    that can be used in the proposal.
+  agent: business_analyst
+
+create_demo_website_task:
+  description: >
+    For each enriched lead, generate a personalized HTML landing page
+    using the Demo Website Generator tool:
+    1. Pass the business_name, category, address, phone, description,
+       rating, and reviews_count to the tool
+    2. The tool selects the right template (restaurant/spa/fitness/general)
+       and saves the HTML file locally
+    3. Then use the GitHub Pages Deployer tool to publish each file online
+    4. Collect the live demo URL for each business
+    The demo should impress the business owner and show them
+    what their online presence COULD look like.
+  expected_output: >
+    A JSON array with each lead now including:
+    demo_html_path (local file path), demo_url (live GitHub Pages URL),
+    and template_type used.
+  agent: website_creator
+
+write_proposal_task:
+  description: >
+    For each lead with a demo website, create a personalized proposal:
+    1. Open with a specific compliment about their business (use reviews/rating)
+    2. Identify 2-3 specific digital gaps from the analysis
+    3. Present the demo website as a preview of what you can build
+    4. Include pricing: Website from $500-1500 + $30-50/month hosting
+    5. Add a clear CTA: "Reply to schedule a free 15-min call"
+    6. Write in the appropriate language for the business location
+    Format as a clean email body with the proposal inline.
+  expected_output: >
+    A JSON array where each lead now includes:
+    email_subject, email_body (HTML-formatted), and proposal_summary.
+    The email should be ready to send.
+  agent: proposal_writer
+
+send_outreach_task:
+  description: >
+    Review the complete outreach package for each prospect and send emails.
+    For each lead:
+    1. Verify the email address is present and looks valid
+    2. Confirm the demo URL is accessible
+    3. Use the Email Sender tool to send the personalized email
+    4. Log the result (sent/failed) for each lead
+    5. Save all results to output/outreach_log.csv
+    IMPORTANT: Do NOT send more than {max_emails_per_run} emails per run.
+    IMPORTANT: If dry_run is True, log what WOULD be sent but do NOT call
+    the Email Sender tool — just output the preview.
+  expected_output: >
+    A summary report with:
+    - Total leads processed
+    - Emails sent successfully (or previewed in dry_run mode)
+    - Emails failed or skipped
+    - CSV log path
+    - Recommended follow-up dates (3-5 days from today)
+  agent: outreach_manager

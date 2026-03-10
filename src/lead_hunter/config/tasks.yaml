@@ -8,7 +8,7 @@ find_leads_task:
     - Website URL (if exists)
     - Rating and number of reviews
     - Business category
-    Filter results: keep only businesses with 4+ stars and 50+ reviews
+    Filter results: keep only businesses with 4.5+ stars and 100+ reviews
     that either have no website or have a clearly outdated one.
     Return a structured JSON list of up to {max_leads} qualified leads.
   expected_output: >
@@ -20,53 +20,77 @@ find_leads_task:
 
 analyze_business_task:
   description: >
-    For each lead from the previous task:
-    1. Visit their website (if exists) and assess its quality
-       (mobile-friendly? HTTPS? modern design? loading speed?)
-    2. Search for their social media profiles (Instagram, Facebook)
-    3. Find the owner/manager email through the website, socials, or web search
-    4. Write a brief analysis of their digital presence gaps
-    Return an enriched version of each lead with contact details
-    and personalized analysis.
+    For each lead from the previous task, use web search only (no scraping):
+    1. Search "BUSINESS_NAME Koh Samui email contact" to find owner email
+    2. Search "BUSINESS_NAME Koh Samui Instagram Facebook" for social links
+    3. Note 2-3 specific digital gaps (no website / Facebook-only / outdated site)
+    Replace BUSINESS_NAME with the actual business name from the lead.
+    Be concise — one search per lead maximum. Return enriched leads.
   expected_output: >
     An enriched JSON array where each lead now also includes:
-    email, social_media_links, website_analysis, digital_gaps,
-    and a personalization_notes field with specific observations
-    that can be used in the proposal.
+    email (best guess or empty string), social_media_links (list),
+    digital_gaps (2-3 bullet points), personalization_note (1 sentence).
   agent: business_analyst
 
 create_demo_website_task:
   description: >
-    For each enriched lead, generate a personalized HTML landing page
-    using the Demo Website Generator tool:
-    1. Pass the business_name, category, address, phone, description,
-       rating, and reviews_count to the tool
-    2. The tool selects the right template (restaurant/spa/fitness/general)
-       and saves the HTML file locally
-    3. Then use the GitHub Pages Deployer tool to publish each file online
-    4. Collect the live demo URL for each business
-    The demo should impress the business owner and show them
-    what their online presence COULD look like.
+    For each enriched lead, write a website brief JSON file to output/briefs/.
+    The brief must include:
+    - business_name, category, address, phone, rating, reviews_count
+    - template: one of "restaurant" / "spa" / "fitness" / "general"
+    - color_scheme: e.g. "warm amber and stone" for restaurants
+    - tone: e.g. "authentic, welcoming, family-owned"
+    - sections: ["Hero", "About", "Services", "Reviews", "Contact"]
+    - key_selling_points: 3 bullet points from the business data
+    - demo_prompt: a ready-made Claude prompt to generate the HTML,
+      e.g. "Generate a Tailwind HTML landing page for BUSINESS_NAME,
+      a CATEGORY in CITY. Tone: TONE. Sections: SECTIONS. Colors: COLORS."
+      Replace the CAPS placeholders with the actual business data.
+    Save each brief as output/briefs/BUSINESS_SLUG.json using FileWriterTool
+    (slug = business name lowercased with spaces replaced by underscores).
   expected_output: >
     A JSON array with each lead now including:
-    demo_html_path (local file path), demo_url (live GitHub Pages URL),
-    and template_type used.
+    brief_path (e.g. output/briefs/thai_kitchen.json) and demo_prompt.
+    NO HTML generation — just the brief files.
   agent: website_creator
 
 write_proposal_task:
   description: >
-    For each lead with a demo website, create a personalized proposal:
-    1. Open with a specific compliment about their business (use reviews/rating)
-    2. Identify 2-3 specific digital gaps from the analysis
-    3. Present the demo website as a preview of what you can build
-    4. Include pricing: Website from $500-1500 + $30-50/month hosting
-    5. Add a clear CTA: "Reply to schedule a free 15-min call"
-    6. Write in the appropriate language for the business location
-    Format as a clean email body with the proposal inline.
+    For each lead, produce a personalized HTML email. Use the structure below,
+    replacing CAPS placeholders with real lead data.
+
+    SUBJECT: BUSINESS_NAME — We Built You a Free Website Demo
+
+    HTML BODY:
+    Start with a short personal opener referencing their Google rating and reviews.
+    Mention the specific digital gap found (no website, Facebook-only, etc.).
+    Offer the free demo website — tell them to reply to receive the live link.
+    List what is included (mobile design, Maps, menu, contact form, HTTPS).
+    State pricing: from $500 one-time + $40/month hosting.
+    End with the sender signature block shown below — use it exactly as written.
+
+    SIGNATURE BLOCK (always include at the bottom of every email, verbatim):
+    <table style="font-family:sans-serif;font-size:14px;color:#333;margin-top:24px">
+    <tr><td style="padding:4px 12px 4px 0"><strong>Arsenii Obukhov</strong></td></tr>
+    <tr><td style="padding:4px 12px 4px 0;color:#888">Palm York Co., Ltd.</td></tr>
+    <tr><td style="padding:4px 12px 4px 0">
+      📱 WhatsApp / Telegram:
+      <a href="https://wa.me/79129244410">+7 912 924 4410</a>
+    </td></tr>
+    <tr><td style="padding:4px 12px 4px 0">
+      💬 LINE: scan QR below
+    </td></tr>
+    <tr><td style="padding:8px 0">
+      <img src="https://Ariec18.github.io/bring-me-leeds-crew/assets/line_qr.jpg"
+           alt="LINE QR Code" width="130"
+           style="border-radius:8px;display:block"/>
+    </td></tr>
+    </table>
+
+    Keep the email body concise — max 100 words before the signature.
   expected_output: >
     A JSON array where each lead now includes:
-    email_subject, email_body (HTML-formatted), and proposal_summary.
-    The email should be ready to send.
+    email_subject (string) and email_body (HTML string with signature).
   agent: proposal_writer
 
 send_outreach_task:

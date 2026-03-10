@@ -1,12 +1,11 @@
 import os
-import smtplib
 import csv
+import json
 from datetime import datetime
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from pathlib import Path
 from typing import Type
 
+import requests
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
@@ -14,20 +13,20 @@ from pydantic import BaseModel, Field
 class EmailSenderInput(BaseModel):
     to_email: str = Field(description="Recipient email address")
     subject: str = Field(description="Email subject line")
-    body_html: str = Field(description="HTML body of the email")
+    body_html: str = Field(description="HTML or plain text body of the email")
     dry_run: bool = Field(
         default=False,
-        description="If True, logs the email but does NOT send it. Safe for testing.",
+        description="If True, logs the email but does NOT send it.",
     )
 
 
 class EmailSenderTool(BaseTool):
     name: str = "Email Sender"
     description: str = (
-        "Sends a personalized HTML email to a prospect via SMTP. "
+        "Sends a personalized email via Resend API. "
         "Input: to_email, subject, body_html, dry_run (optional, default False). "
-        "If dry_run=True — logs the email without sending. "
-        "Returns send status (SUCCESS/DRY_RUN/FAILED) and appends to output/outreach_log.csv."
+        "If dry_run=True — logs without sending. "
+        "Returns send status and appends to output/outreach_log.csv."
     )
     args_schema: Type[BaseModel] = EmailSenderInput
 
@@ -45,31 +44,37 @@ class EmailSenderTool(BaseTool):
         status = "DRY_RUN"
 
         if not dry_run:
-            smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
-            smtp_port = int(os.getenv("SMTP_PORT", "587"))
-            smtp_user = os.getenv("SMTP_USER")
-            smtp_pass = os.getenv("SMTP_PASS")
-            from_email = os.getenv("FROM_EMAIL", smtp_user)
+            api_key = os.getenv("RESEND_API_KEY")
+            from_email = os.getenv("FROM_EMAIL", "onboarding@resend.dev")
 
-            if not smtp_user or not smtp_pass:
-                return "ERROR: SMTP_USER / SMTP_PASS not set in environment."
+            if not api_key:
+                return "ERROR: RESEND_API_KEY not set in environment."
 
-            msg = MIMEMultipart("alternative")
-            msg["Subject"] = subject
-            msg["From"] = from_email
-            msg["To"] = to_email
-            msg.attach(MIMEText(body_html, "html"))
+            # Plain text → wrap in minimal HTML if needed
+            if not body_html.strip().startswith("<"):
+                body_html = body_html.replace("\n", "<br>")
 
-            try:
-                with smtplib.SMTP(smtp_host, smtp_port) as server:
-                    server.starttls()
-                    server.login(smtp_user, smtp_pass)
-                    server.send_message(msg)
+            response = requests.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": from_email,
+                    "to": [to_email],
+                    "subject": subject,
+                    "html": body_html,
+                },
+                timeout=15,
+            )
+
+            if response.status_code in (200, 201):
                 status = "SUCCESS"
-            except Exception as e:
-                status = f"FAILED: {str(e)}"
+            else:
+                status = f"FAILED: {response.status_code} — {response.text}"
 
-        # Append to CSV log regardless of mode
+        # Append to CSV log
         file_exists = log_path.exists()
         with open(log_path, "a", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)

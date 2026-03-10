@@ -15,6 +15,9 @@ class LeadHunterCrew:
     agents_config = "config/agents.yaml"
     tasks_config = "config/tasks.yaml"
 
+    # Set to True by main.py when running with --dry-run flag
+    dry_run: bool = False
+
     # ── AGENTS ──────────────────────────────────────────────────────────────
 
     @agent
@@ -28,14 +31,14 @@ class LeadHunterCrew:
     def business_analyst(self) -> Agent:
         return Agent(
             config=self.agents_config["business_analyst"],
-            tools=[ScrapeWebsiteTool(), SerperDevTool()],
+            tools=[SerperDevTool()],  # No scraping — search only, much cheaper
         )
 
     @agent
     def website_creator(self) -> Agent:
         return Agent(
             config=self.agents_config["website_creator"],
-            tools=[WebsiteGeneratorTool(), GithubPagesDeployerTool(), FileWriterTool()],
+            tools=[FileWriterTool()],  # Just saves brief JSON, no HTML generation
         )
 
     @agent
@@ -74,10 +77,9 @@ class LeadHunterCrew:
     def send_outreach_task(self) -> Task:
         return Task(
             config=self.tasks_config["send_outreach_task"],
-            # human_input=True pauses the pipeline here so you can review
-            # all emails before they go out. Type 'yes' to proceed, or
-            # modify the agent's plan in natural language.
-            human_input=True,
+            # In dry-run: skip human review (no real emails anyway)
+            # In live mode: pause and ask for confirmation before sending
+            human_input=not self.dry_run,
             output_file="output/outreach_report.md",
         )
 
@@ -90,4 +92,5 @@ class LeadHunterCrew:
             tasks=self.tasks,
             process=Process.sequential,
             verbose=True,
+            max_rpm=8,  # Groq free tier: 30 RPM — 8 даёт запас для параллельных вызовов
         )

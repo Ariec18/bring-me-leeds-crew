@@ -42,7 +42,9 @@ def run(dry_run: bool = False) -> None:
     # Import here so dotenv is loaded first
     from lead_hunter.crew import LeadHunterCrew
 
-    LeadHunterCrew().crew().kickoff(inputs=inputs)
+    crew_instance = LeadHunterCrew()
+    crew_instance.dry_run = dry_run
+    crew_instance.crew().kickoff(inputs=inputs)
 
 
 if __name__ == "__main__":
